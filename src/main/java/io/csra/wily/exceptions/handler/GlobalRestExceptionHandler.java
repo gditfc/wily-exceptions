@@ -13,6 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -151,7 +153,7 @@ public class GlobalRestExceptionHandler extends DefaultHandlerExceptionResolver 
 				break;
 		}
 
-		return new ResponseEntity<Object>(getResponseDto(message, status), status);
+		return new ResponseEntity<>(getResponseDto(message, status), getHeaders(), status);
 	}
 
 	/**
@@ -187,5 +189,12 @@ public class GlobalRestExceptionHandler extends DefaultHandlerExceptionResolver 
 		dto.setStatus(status.value());
 		dto.setMessage(message);
 		return dto;
+	}
+
+	private MultiValueMap<String, String> getHeaders() {
+		MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
+		headers.add("Access-Control-Allow-Origin", environment.getProperty("access.control.origin"));
+
+		return headers;
 	}
 }
