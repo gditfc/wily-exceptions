@@ -64,6 +64,11 @@ public class GlobalRestExceptionHandler extends DefaultHandlerExceptionResolver 
 		return handleException(e, HttpStatus.BAD_REQUEST, request, response);
 	}
 
+	@ExceptionHandler(value = { UnsupportedMediaTypeException.class })
+	protected ResponseEntity<Object> handleUnsupportedMediaType(RuntimeException e, WebRequest request, HttpServletResponse response) {
+		return handleException(e, HttpStatus.UNSUPPORTED_MEDIA_TYPE, request, response);
+	}
+
 	@ExceptionHandler(value = { RestClientException.class, DatatypeConfigurationException.class })
 	protected ResponseEntity<Object> handleServiceUnavailableException(RuntimeException e, WebRequest request, HttpServletResponse response) {
 		return handleException(e, HttpStatus.SERVICE_UNAVAILABLE, request, response);
