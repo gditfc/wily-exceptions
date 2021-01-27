@@ -6,8 +6,8 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import io.csra.wily.exceptions.model.JsonResponseDto;
-import org.springframework.beans.factory.annotation.Autowired;
+import io.csra.wily.exceptions.model.JsonResponseDTO;
+import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,14 +25,17 @@ public class GlobalRestErrorController implements ErrorController {
 
 	private static final String PATH = "/error";
 
-	@Autowired
 	private ErrorAttributes errorAttributes;
 
-	@RequestMapping(value = PATH)
-	public JsonResponseDto error(HttpServletRequest request, WebRequest webRequest, HttpServletResponse response) {
-		Map<String, Object> attrs = getErrorAttributes(webRequest, false);
+	public GlobalRestErrorController(ErrorAttributes errorAttributes) {
+		this.errorAttributes = errorAttributes;
+	}
 
-		JsonResponseDto dto = new JsonResponseDto();
+	@RequestMapping(value = PATH)
+	public JsonResponseDTO error(HttpServletRequest request, WebRequest webRequest, HttpServletResponse response) {
+		Map<String, Object> attrs = errorAttributes.getErrorAttributes(webRequest, ErrorAttributeOptions.defaults());
+
+		JsonResponseDTO dto = new JsonResponseDTO();
 		dto.setStatus(response.getStatus());
 		dto.setError((String) attrs.get("error"));
 		dto.setMessage((String) attrs.get("message"));
@@ -46,7 +49,4 @@ public class GlobalRestErrorController implements ErrorController {
 		return PATH;
 	}
 
-	private Map<String, Object> getErrorAttributes(WebRequest request, boolean includeStackTrace) {
-		return errorAttributes.getErrorAttributes(request, includeStackTrace);
-	}
 }

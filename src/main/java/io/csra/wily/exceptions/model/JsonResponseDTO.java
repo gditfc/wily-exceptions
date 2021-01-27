@@ -8,18 +8,18 @@ import java.util.Date;
  *
  * @author ndimola
  */
-public class JsonResponseDto {
+public class JsonResponseDTO {
 
 	private Integer status;
 	private String error;
 	private String message;
 	private Date timestamp;
 
-	public JsonResponseDto() {
+	public JsonResponseDTO() {
 		this.timestamp = new Date();
 	}
 
-	public JsonResponseDto(String message) {
+	public JsonResponseDTO(String message) {
 		this.message = message;
 		this.timestamp = new Date();
 	}

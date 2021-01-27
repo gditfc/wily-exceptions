@@ -1,13 +1,12 @@
 package io.csra.wily.exceptions.handler;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.github.dozermapper.core.MappingException;
 import org.apache.commons.lang3.StringUtils;
-import org.dozer.MappingException;
 import io.csra.wily.exceptions.*;
-import io.csra.wily.exceptions.model.JsonResponseDto;
+import io.csra.wily.exceptions.model.JsonResponseDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +19,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver;
 import org.springframework.web.util.WebUtils;
@@ -41,10 +41,13 @@ public class GlobalRestExceptionHandler extends DefaultHandlerExceptionResolver 
 	private static final String DEFAULT_EXCEPTION_MESSAGE = "An unexpected error has occurred. Please try again later.";
 	private static final String NONCOMPLIANT_JSON = "Noncompliant JSON";
 
-	@Autowired
-	private Environment environment;
+	private final Environment environment;
 
-	@ExceptionHandler(value = { IllegalArgumentException.class })
+	public GlobalRestExceptionHandler(Environment environment) {
+		this.environment = environment;
+	}
+
+	@ExceptionHandler(value = { ConflictException.class, IllegalArgumentException.class })
 	protected ResponseEntity<Object> handleConflict(RuntimeException e, WebRequest request, HttpServletResponse response) {
 		return handleException(e, HttpStatus.CONFLICT, request, response);
 	}
@@ -115,13 +118,14 @@ public class GlobalRestExceptionHandler extends DefaultHandlerExceptionResolver 
 	/**
 	 * Determines if there is a Rest End-Point JSON contract breach and issues a Bad Request.
 	 * 
-	 * @param e
-	 * @param request
-	 * @return
+	 * @param e RuntimeException
+	 * @param request WebRequest
+	 * @param response HttpServletResponse
+	 * @return ResponseEntity
 	 */
 	@ExceptionHandler(value = { HttpMessageNotReadableException.class })
 	protected ResponseEntity<Object> handleHttpMessageNotReadableException(RuntimeException e, WebRequest request, HttpServletResponse response) {
-		if (e.getCause() != null && e.getCause() instanceof JsonMappingException) {
+		if (e.getCause() instanceof JsonMappingException) {
 			return handleException(new RuntimeException(NONCOMPLIANT_JSON, e), HttpStatus.UNSUPPORTED_MEDIA_TYPE, request, response);
 		} else {
 			return handleException(e, HttpStatus.INTERNAL_SERVER_ERROR, request, response);
@@ -133,10 +137,10 @@ public class GlobalRestExceptionHandler extends DefaultHandlerExceptionResolver 
 	 * return the proper response in the expected format. This will ensure consistent messages returned from all endpoints in
 	 * situations where an HTTP Status of 200 is not provided.
 	 * 
-	 * @param e
-	 * @param status
-	 * @param request
-	 * @return
+	 * @param e RuntimeException
+	 * @param status HttpStatus
+	 * @param request HttpServletResponse
+	 * @return ResponseEntity
 	 */
 	private ResponseEntity<Object> handleException(RuntimeException e, HttpStatus status, WebRequest request, HttpServletResponse response) {
 		String message = e.getMessage() != null ? e.getMessage() : status.getReasonPhrase();
@@ -145,11 +149,9 @@ public class GlobalRestExceptionHandler extends DefaultHandlerExceptionResolver 
 
 		switch (status) {
 			case INTERNAL_SERVER_ERROR:
-				message = handleInternalServerError(e, status, request);
+				message = handleInternalServerError(e, request);
 				break;
 			case SERVICE_UNAVAILABLE:
-				LOGGER.error(e.getMessage(), e);
-				break;
 			case UNSUPPORTED_MEDIA_TYPE:
 				LOGGER.error(e.getMessage(), e);
 				break;
@@ -165,14 +167,13 @@ public class GlobalRestExceptionHandler extends DefaultHandlerExceptionResolver 
 	 * Helper method for {@link #handleException handleException}. This method deals with Internal Server Errors specifically
 	 * in order to make the code more testable, readable, and maintainable.
 	 * 
-	 * @param e
-	 * @param status
-	 * @param request
-	 * @return
+	 * @param e RuntimeException
+	 * @param request WebRequest
+	 * @return Exception Message
 	 */
-	private String handleInternalServerError(RuntimeException e, HttpStatus status, WebRequest request) {
+	private String handleInternalServerError(RuntimeException e, WebRequest request) {
 		LOGGER.error(e.getMessage(), e);
-		request.setAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE, e, WebRequest.SCOPE_REQUEST);
+		request.setAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE, e, RequestAttributes.SCOPE_REQUEST);
 
 		String overrideMessage = environment.getProperty("exception.message.default");
 		if (StringUtils.isNotBlank(overrideMessage)) {
@@ -185,11 +186,11 @@ public class GlobalRestExceptionHandler extends DefaultHandlerExceptionResolver 
 	/**
 	 * Helper method to create response DTO.
 	 * 
-	 * @param message
-	 * @return
+	 * @param message Response Message
+	 * @return JsonResponseDTO
 	 */
-	private JsonResponseDto getResponseDto(String message, HttpStatus status) {
-		JsonResponseDto dto = new JsonResponseDto();
+	private JsonResponseDTO getResponseDto(String message, HttpStatus status) {
+		JsonResponseDTO dto = new JsonResponseDTO();
 		dto.setError(status.getReasonPhrase());
 		dto.setStatus(status.value());
 		dto.setMessage(message);
