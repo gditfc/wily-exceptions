@@ -216,7 +216,7 @@ public class GlobalRestExceptionHandler extends DefaultHandlerExceptionResolver 
 			HttpServletRequest request = requestAttributes.getRequest();
 			headers.add(
 					HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN,
-					request.getHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN)
+					request.getHeader(HttpHeaders.ORIGIN)
 			);
 		}
 
