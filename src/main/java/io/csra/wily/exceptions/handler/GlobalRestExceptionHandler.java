@@ -8,6 +8,7 @@ import io.csra.wily.exceptions.model.JsonResponseDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -20,10 +21,13 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver;
 import org.springframework.web.util.WebUtils;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.datatype.DatatypeConfigurationException;
 
@@ -197,9 +201,24 @@ public class GlobalRestExceptionHandler extends DefaultHandlerExceptionResolver 
 		return dto;
 	}
 
+	/**
+	 * Get the Origin header from the current request
+	 * (request will have passed CORS filter by this point) and return it
+	 * as Access-Control-Allow-Origin in a MultiValueMap
+	 * @return a MultiValueMap containing the allow origin header, or empty
+	 *         if the current request attributes do not exist
+	 */
 	private MultiValueMap<String, String> getHeaders() {
 		MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
-		headers.add("Access-Control-Allow-Origin", environment.getProperty("access.control.origin"));
+		ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+
+		if (requestAttributes != null) {
+			HttpServletRequest request = requestAttributes.getRequest();
+			headers.add(
+					HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN,
+					request.getHeader(HttpHeaders.ORIGIN)
+			);
+		}
 
 		return headers;
 	}
