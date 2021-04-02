@@ -202,9 +202,9 @@ public class GlobalRestExceptionHandler extends DefaultHandlerExceptionResolver 
 	}
 
 	/**
-	 * Get the Access-Control-Allow-Origin header from the current request
+	 * Get the Origin header from the current request
 	 * (request will have passed CORS filter by this point) and return it
-	 * in a MultiValueMap
+	 * as Access-Control-Allow-Origin in a MultiValueMap
 	 * @return a MultiValueMap containing the allow origin header, or empty
 	 *         if the current request attributes do not exist
 	 */
