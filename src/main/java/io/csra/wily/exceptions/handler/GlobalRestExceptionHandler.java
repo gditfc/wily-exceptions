@@ -152,16 +152,9 @@ public class GlobalRestExceptionHandler extends DefaultHandlerExceptionResolver 
 		response.reset();
 
 		switch (status) {
-			case INTERNAL_SERVER_ERROR:
-				message = handleInternalServerError(e, request);
-				break;
-			case SERVICE_UNAVAILABLE:
-			case UNSUPPORTED_MEDIA_TYPE:
-				LOGGER.error(e.getMessage(), e);
-				break;
-			default:
-				LOGGER.debug(e.getMessage(), e);
-				break;
+			case INTERNAL_SERVER_ERROR -> message = handleInternalServerError(e, request);
+			case SERVICE_UNAVAILABLE, UNSUPPORTED_MEDIA_TYPE -> LOGGER.error(e.getMessage(), e);
+			default -> LOGGER.debug(e.getMessage(), e);
 		}
 
 		return new ResponseEntity<>(getResponseDto(message, status), getHeaders(), status);
@@ -210,16 +203,17 @@ public class GlobalRestExceptionHandler extends DefaultHandlerExceptionResolver 
 	 */
 	private MultiValueMap<String, String> getHeaders() {
 		MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
-		ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+		final ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
 
 		if (requestAttributes != null) {
-			HttpServletRequest request = requestAttributes.getRequest();
-			headers.add(
-					HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN,
-					request.getHeader(HttpHeaders.ORIGIN)
-			);
-		}
+            final HttpServletRequest request = requestAttributes.getRequest();
+            if (!StringUtils.isEmpty(request.getHeader(HttpHeaders.ORIGIN)))
+                headers.add(
+                    HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN,
+                    request.getHeader(HttpHeaders.ORIGIN)
+                );
+        }
 
-		return headers;
-	}
+        return headers;
+    }
 }

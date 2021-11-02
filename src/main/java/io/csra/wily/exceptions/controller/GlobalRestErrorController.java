@@ -23,15 +23,13 @@ import org.springframework.web.context.request.WebRequest;
 @RestController
 public class GlobalRestErrorController implements ErrorController {
 
-	private static final String PATH = "/error";
-
-	private ErrorAttributes errorAttributes;
+	private final ErrorAttributes errorAttributes;
 
 	public GlobalRestErrorController(ErrorAttributes errorAttributes) {
 		this.errorAttributes = errorAttributes;
 	}
 
-	@RequestMapping(value = PATH)
+	@RequestMapping("${server.error.path:/error}")
 	public JsonResponseDTO error(HttpServletRequest request, WebRequest webRequest, HttpServletResponse response) {
 		Map<String, Object> attrs = errorAttributes.getErrorAttributes(webRequest, ErrorAttributeOptions.defaults());
 
@@ -42,11 +40,6 @@ public class GlobalRestErrorController implements ErrorController {
 		dto.setTimestamp((Date) attrs.get("timestamp"));
 
 		return dto;
-	}
-
-	@Override
-	public String getErrorPath() {
-		return PATH;
 	}
 
 }
