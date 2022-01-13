@@ -6,13 +6,13 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @ResponseStatus(value = HttpStatus.REQUEST_TIMEOUT)
 public class RequestTimeOutException extends RuntimeException {
 
-	private static final long serialVersionUID = -702716764852992892L;
+    private static final long serialVersionUID = -702716764852992892L;
 
-	public RequestTimeOutException() {
+    public RequestTimeOutException() {
         super();
     }
 
-    public RequestTimeOutException(String s) {
+    public RequestTimeOutException(final String s) {
         super(s);
     }
 }
