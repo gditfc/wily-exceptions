@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.github.dozermapper.core.MappingException;
 import io.csra.wily.exceptions.BadRequestException;
 import io.csra.wily.exceptions.ConflictException;
+import io.csra.wily.exceptions.FailedDependencyException;
 import io.csra.wily.exceptions.ForbiddenException;
 import io.csra.wily.exceptions.GenericRestException;
 import io.csra.wily.exceptions.InternalServerException;
@@ -97,6 +98,11 @@ public class GlobalRestExceptionHandler extends DefaultHandlerExceptionResolver 
     @ExceptionHandler(value = {AccessDeniedException.class})
     protected ResponseEntity<Object> handleAccessDeniedException(final RuntimeException e, final WebRequest request, final HttpServletResponse response) {
         return handleException(e, HttpStatus.FORBIDDEN, request, response);
+    }
+
+    @ExceptionHandler(value = {FailedDependencyException.class})
+    protected ResponseEntity<Object> handleFailedDependencyException(final RuntimeException e, final WebRequest request, final HttpServletResponse response) {
+        return handleException(e, HttpStatus.FAILED_DEPENDENCY, request, response);
     }
 
     @ExceptionHandler(value = {GenericRestException.class})
